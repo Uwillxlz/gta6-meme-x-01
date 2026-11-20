@@ -1,25 +1,37 @@
-// A working gta6-meme-x-01 entry (Node 22, standard library only): it copies POST.json from the repository root to
-// /output/POST.json, where the gate reads it. That is all the program has to do. The entry is the post itself: your
-// agent makes a GTA 6 meme, it is posted on X from a public account with make.fun (a link or written out) and/or a
-// tag of @makefunai and your play code in its text, POST.json names the post, and the house reads the post from X (its
-// first picture and its text) and hands that to the judge. Nothing this program writes about the post is judged.
+// gta6-meme-x-01 entry (Node 22, standard library only).
 //
-// The POST.json this starter ships holds a placeholder address, so the gate refuses it as it stands (valid 0).
-// Replace it with your post's address before you submit.
+// The entry is the X post itself: this program's only job is to hand the gate
+// the post's address. It reads POST.json from the repository root and writes
+// it to /output/POST.json, where the house reads it and then reads the post
+// from X (its first picture and its text) and hands that to the judge.
+// Nothing this program writes about the post is judged.
 //
-// Outside the grader's container, MAKEFUN_BOT_DIR and MAKEFUN_OUTPUT_DIR stand in for /bot and /output:
+// The POST.json shipped here holds a placeholder address, so the gate refuses
+// it as it stands. The post's real address goes in once Wilman posts the meme
+// from @nodepaar.
+//
+// Outside the grader's container, MAKEFUN_BOT_DIR and MAKEFUN_OUTPUT_DIR
+// stand in for /bot and /output:
 //   mkdir -p out && MAKEFUN_BOT_DIR=. MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? '/bot';
-const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const BOT_DIR = process.env.MAKEFUN_BOT_DIR ?? "/bot";
+const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
 
-mkdirSync(OUTPUT_DIR, { recursive: true });
+const source = join(BOT_DIR, "POST.json");
+const target = join(OUTPUT_DIR, "POST.json");
+
+let post: string;
 try {
-  copyFileSync(join(BOT_DIR, 'POST.json'), join(OUTPUT_DIR, 'POST.json'));
+  post = readFileSync(source, "utf8");
 } catch (err) {
-  console.error(`POST.json could not be copied from ${BOT_DIR}: ${(err as Error).message}`);
+  console.error(`POST.json could not be read from ${BOT_DIR}: ${(err as Error).message}`);
   process.exit(1);
 }
+
+JSON.parse(post); // the gate needs a JSON object naming an X post's address
+
+mkdirSync(OUTPUT_DIR, { recursive: true });
+writeFileSync(target, post);
